@@ -144,12 +144,15 @@ class IsReadyUpFinishedUseCase:
         self.ready_up_model = in_ready_up_model
 
     def __call__(self) -> bool:
+
         is_ready_up_successful_use_case = IsReadyUpSuccessfulUseCase(self.ready_up_model)
         is_ready_up_failed_use_case = IsReadyUpFailedUseCase(self.ready_up_model)
+
+        # failed or succeeded means we are finished, we can also timeout but that is handled seperately
         return is_ready_up_successful_use_case() or is_ready_up_failed_use_case()
 
 class StringifySetUseCase:
-    # in_stringify_callable : is a function that converts an element in the container to a string
+    # convert all elements in the list to a list of strings, using the function passed to "in_stringify_callable" to determine how to convert the string
     def __init__(self, in_elements : set, in_stringify_callable):
         self.elements = in_elements
         self.in_stringify_callable = in_stringify_callable
@@ -177,6 +180,7 @@ class StringifySetUseCase:
 
         return out_str
 
+# converts a container of members to a string in the form of "@DiscordUser1 and @DiscordUser2" to ping them
 class StringifyMembersToMentionsUseCase:
     def __init__(self, in_members : set):
         self.members = in_members
@@ -186,6 +190,7 @@ class StringifyMembersToMentionsUseCase:
         out_str = stringify_to_mentions()
         return out_str
 
+# converts a container of members to a string in the form of "DiscordUser1, and DiscordUser2 to identify them"
 class StringifyMembersToNamesUseCase:
     def __init__(self, in_members : set):
         self.members = in_members
@@ -195,6 +200,7 @@ class StringifyMembersToNamesUseCase:
         out_str = stringify_to_names()
         return out_str
 
+# gets the plural 
 class GetPluralUseCase:
     def __init__(self, in_container):
         self.container = in_container
