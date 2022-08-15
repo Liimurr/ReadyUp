@@ -1,5 +1,4 @@
-import asyncio
-
+from asyncio import TimeoutError
 from interactions import Client, Button, ButtonStyle, ComponentContext, CommandContext, option
 from interactions.ext.wait_for import setup
 
@@ -76,7 +75,7 @@ async def ready_up_command(command_context : CommandContext, event_name : str = 
 
             await button_context.defer(ephemeral=True)
             await button_context.send(get_interaction_reply_use_case())
-        except asyncio.TimeoutError:
+        except TimeoutError:
             break
         finally:
             is_ready_up_finished_use_case = IsReadyUpFinishedUseCase(ready_up_model) 
