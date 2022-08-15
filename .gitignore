@@ -1,7 +1,9 @@
-#ignore environment file
+# ignore environment file
 .env
 
-#ignore IDE files
+# ignore IDE generated files
 .idea
 .vs
+
+# ignore misc generated files
 __pycache__
