@@ -1,1 +1,6 @@
+#ignore environment file
 .env
+
+#ignore IDE files
+.idea
+.vs

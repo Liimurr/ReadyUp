@@ -1,3 +1,4 @@
-# Dependencies
-* pip install -U discord-py-interactions
-* pip install -U discord.py
+# Python Dependencies
+* discord-py-interactions
+* interactions-wait-for
+* discord.py
