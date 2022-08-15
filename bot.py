@@ -40,12 +40,6 @@ class CustomIdToButtonIdUseCase:
             case _:
                 return ButtonId.INVALID
 
-class ReadyUpReply(Enum):
-    INVALID = 0
-    AUTHOR_ONLY = 1
-    READY_MEMBERS = 2
-    UNREADY_MEMBERS = 3
-
 # MVVM
 class ReadyUpModel:
     def __init__(self) -> None:
@@ -133,9 +127,12 @@ class CloseReadyUpContextUseCase:
         self.context = in_context
     
     async def __call__(self) -> None:
-        if self.context is not None:
-            new_content = self.context.message.content + " (Closed)"
-            await self.context.edit(components=[], content=new_content)
+        if self.context is not None and self.context.message is not None:
+            try:
+                new_content = self.context.message.content + " (Closed)"
+                await self.context.edit(components=[], content=new_content)
+            except:
+                print("error trying to close ready up context")
 
 class ClosePreviousContextUseCase:
     def __init__(self, inout_model : ReadyUpModel) -> None:
@@ -355,6 +352,5 @@ async def ready_up_command(command_context : CommandContext, event_name : str = 
 
     get_final_result_message_use_case = GetFinalResultMessageUseCase(ready_up_model)
     await command_context.send(get_final_result_message_use_case())
-    # edit the original message and remove the button(s)
 
 client.start()
