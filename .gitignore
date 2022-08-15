@@ -4,3 +4,4 @@
 #ignore IDE files
 .idea
 .vs
+__pycache__
