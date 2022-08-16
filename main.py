@@ -5,7 +5,7 @@ from interactions.ext.wait_for import setup
 
 from readyup_domain import ReadyUpModel
 from readyup_ui import ReadyUpViewModel
-from readyup_constants import BIG_NUMBER, ButtonId, ButtonIdStr, DISCORD_TOKEN, SERVER_ID
+from readyup_constants import BIG_NUMBER, BUTTON_ID_SEPARATOR, ButtonId, ButtonIdStr, DISCORD_TOKEN, SERVER_ID
 from readyup_usecases import *
 
 ready_up_model = ReadyUpModel()
@@ -20,11 +20,9 @@ client = Client(
 setup(client)
 
 @client.command(name="ready_up", description="ready up polling bot")
-@option(str, name="event_name", description="name of the event (default=\"\")", required=False)
-@option(str, name="time_frame", description="what time frame are setting (default=\"\")", required=False)
-@option(int, name="duration", description="how long in seconds this request will stay active before timing out (default=60 seconds)", required=False)
-@option(int, name="number_to_wait_for", description="how many need to be ready? (default=3)", required = False)
-async def ready_up_command(command_context : CommandContext, event_name : str = "", time_frame : str = "", duration : int = 60, number_to_wait_for : int = 3):
+@option(str, name="event", description="name of the event, \"Are you ready for <event>?\" (default=\"\")", required=False)
+@option(int, name="requires", description="how many need to be ready? (default=3)", required = False)
+async def ready_up_command(command_context : CommandContext, event : str = "", requires : int = 3):
     global ready_up_model, ready_up_view_model
 
     # if there is a previously open ready up poll, close it.
@@ -38,20 +36,18 @@ async def ready_up_command(command_context : CommandContext, event_name : str = 
 
     # initialize ready up model
     ready_up_model.active_context = command_context
-    ready_up_model.event_name = event_name
-    ready_up_model.time_frame = time_frame
-    ready_up_model.num_ready_for_success = number_to_wait_for
-    ready_up_model.timeout_in_seconds = duration
+    ready_up_model.event_name = event
+    ready_up_model.num_ready_for_success = requires
 
     ready_button = Button(
         style=ButtonStyle(ButtonStyle.SUCCESS),
-        custom_id=ButtonIdStr.READY.value + str(randint(0, BIG_NUMBER)), # each button requires a unique id, so appending some random number is necessary
+        custom_id=ButtonIdStr.READY.value + BUTTON_ID_SEPARATOR + str(randint(0, BIG_NUMBER)), # each button requires a unique id, so appending some random number is necessary
         label="Ready"
     )
 
     not_ready_button = Button(
         style=ButtonStyle(ButtonStyle.DANGER),
-        custom_id=ButtonIdStr.NOT_READY.value + str(randint(0, BIG_NUMBER)), # each button requires a unique id, so appending some random number is necessary
+        custom_id=ButtonIdStr.NOT_READY.value + BUTTON_ID_SEPARATOR + str(randint(0, BIG_NUMBER)), # each button requires a unique id, so appending some random number is necessary
         label="Not Ready"
     )
     
@@ -134,8 +130,9 @@ async def ready_up_command(command_context : CommandContext, event_name : str = 
         await command_context.edit(get_command_message_use_case())
 
         # send a ping out to everyone who readied up to notify them of the results
-        get_final_results_message_use_case = GetFinalResultMessageUseCase(ready_up_model)
-        await command_context.send(get_final_results_message_use_case())
+        if ready_up_model.ready_members:
+            get_final_results_message_use_case = GetFinalResultMessageUseCase(ready_up_model)
+            await command_context.send(get_final_results_message_use_case())
 
     # else someone else alaready closed the poll
     else:

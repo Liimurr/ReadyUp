@@ -13,6 +13,8 @@ class ButtonIdStr(Enum):
     READY = "ready"
     NOT_READY = "not_ready"
 
+BUTTON_ID_SEPARATOR = "$"
+
 load_dotenv()
 
 DISCORD_TOKEN = getenv('DISCORD_TOKEN')

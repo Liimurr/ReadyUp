@@ -7,7 +7,7 @@ class ReadyUpModel:
         self.time_name : str = ""
         self.num_ready_for_success : int = 3
         self.num_not_ready_for_failure : int = 1
-        self.timeout_in_seconds : float = 60.0
+        self.timeout_in_seconds : float = 900 # 15 minutes
 
         # transient
         self.ready_members : dict = dict() # dict<Member, CommandContext | ButtonContext>
@@ -21,7 +21,7 @@ class ReadyUpModel:
         self.call_to_action : str = ""
         self.num_ready_for_success : int = 3
         self.num_not_ready_for_failure : int = 1
-        self.timeout_in_seconds : float = 60
+        self.timeout_in_seconds : float = 900 # 15 minutes
 
         # transient
         self.ready_members.clear()
