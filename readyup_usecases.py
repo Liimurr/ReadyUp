@@ -1,6 +1,7 @@
 from stringprep import in_table_b1
 from readyup_constants import ButtonId, ButtonIdStr
 from readyup_domain import ReadyUpModel
+from readyup_ui import ReadyUpViewModel
 from interactions import CommandContext, ComponentContext, Member
 
 class ButtonIdToStringUseCase:
@@ -42,7 +43,7 @@ class ButtonCustomIdToButtonIdUseCase:
         else:
             return ButtonId.INVALID
 
-class GetInteractionReplyUseCase:
+class GetStatusMessageUseCase:
     def __init__(self, in_model : ReadyUpModel) -> None:
         self.model = in_model
     
@@ -257,3 +258,28 @@ class GetCallToActionMessageUseCase:
             time_frame_concat = " " + self.model.time_frame
 
         return f"{event_name_concat}{time_frame_concat}?"
+
+class ModelToViewModelUseCase:
+    def __init__(self, in_model : ReadyUpModel, inout_view_model : ReadyUpViewModel):
+        self.model = in_model
+        self.view_model = inout_view_model
+
+    def __call__(self) -> ReadyUpViewModel:
+        get_status_message_use_case = GetStatusMessageUseCase(self.model)
+        get_call_to_action_use_case = GetCallToActionMessageUseCase(self.model)
+
+        self.view_model.clear()
+
+        if self.model.not_ready_members or self.model.ready_members:
+             self.view_model.status = get_status_message_use_case()
+        self.view_model.call_to_action = get_call_to_action_use_case()
+
+        return  self.view_model 
+
+# Get the header message for the main title
+class GetCommandMessageUseCase:
+    def __init__(self, in_view_model : ReadyUpViewModel):
+        self.view_model = in_view_model
+
+    def __call__(self) -> str:
+        return f"{self.view_model.call_to_action}\n{self.view_model.status}"
