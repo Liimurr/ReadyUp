@@ -9,7 +9,7 @@ class ReadyUpModel:
         self.timeout_in_seconds : float = 60.0
         self.ready_members : dict = dict() # dict<Member, CommandContext | ButtonContext>
         self.not_ready_members : set = set() # set<Member>
-        self.previous_context : None | CommandContext = None
+        self.active_context : None | CommandContext = None
 
     def clear(self) -> None:
         self.event_name : str = ""
@@ -19,4 +19,4 @@ class ReadyUpModel:
         self.timeout_in_seconds : float = 60
         self.ready_members.clear()
         self.not_ready_members.clear()
-        self.previous_context : None | CommandContext = None
+        self.active_context : None | CommandContext = None

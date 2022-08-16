@@ -1,9 +1,10 @@
-from asyncio import TimeoutError
+from asyncio import TimeoutError, sleep
+from random import randint
 from interactions import Client, Button, ButtonStyle, ComponentContext, CommandContext, option
 from interactions.ext.wait_for import setup
 
 from readyup_domain import ReadyUpModel
-from readyup_constants import ButtonId, ButtonIdStr, DISCORD_TOKEN, SERVER_ID
+from readyup_constants import BIG_NUMBER, ButtonId, ButtonIdStr, DISCORD_TOKEN, SERVER_ID
 from readyup_usecases import *
 
 ready_up_model = ReadyUpModel()
@@ -25,13 +26,16 @@ async def ready_up_command(command_context : CommandContext, event_name : str = 
     global ready_up_model
 
     # if there is a previously open ready up poll, close it.
-    close_previous_context_use_case = ClosePreviousContextUseCase(ready_up_model)
-    ready_up_model = await close_previous_context_use_case()
+    if ready_up_model.active_context is not None:
+        print("previous context was still active -- closing now")
+        close_previous_context_use_case = CloseActiveContextUseCase(ready_up_model)
+        ready_up_model = await close_previous_context_use_case()
 
     # reset all data to the default 
     ready_up_model.clear()
 
-    # get command arguments
+    # initialize ready up model
+    ready_up_model.active_context = command_context
     ready_up_model.event_name = event_name
     ready_up_model.time_frame = time_frame
     ready_up_model.num_ready_for_success = number_to_wait_for
@@ -39,34 +43,43 @@ async def ready_up_command(command_context : CommandContext, event_name : str = 
 
     ready_button = Button(
         style=ButtonStyle(ButtonStyle.SUCCESS),
-        custom_id=ButtonIdStr.READY.value,
+        custom_id=ButtonIdStr.READY.value + str(randint(0, BIG_NUMBER)), # each button requires a unique id, so appending some random number is necessary
         label="Ready"
     )
 
     not_ready_button = Button(
         style=ButtonStyle(ButtonStyle.DANGER),
-        custom_id=ButtonIdStr.NOT_READY.value,
+        custom_id=ButtonIdStr.NOT_READY.value + str(randint(0, BIG_NUMBER)), # each button requires a unique id, so appending some random number is necessary
         label="Not Ready"
     )
     
     # get the initial message string to show everyone
     get_call_to_action_message_use_case = GetCallToActionMessageUseCase(ready_up_model)
 
+    await sleep(1)
+
     # defer allows us to send follow up messages after the initial message
+    print(f"command context defer {command_context.id}")
     await command_context.defer()
 
     # tell discord to display the initial message
     await command_context.send(get_call_to_action_message_use_case(), components=[ready_button, not_ready_button])
 
+    # create the buttons - once this await returns, it means one of the buttons was clicked
     is_ready_up_finished_use_case = IsReadyUpFinishedUseCase(ready_up_model)
     while(not is_ready_up_finished_use_case()):
         try: 
-            # create the buttons - once this await returns, it means one of the buttons was clicked
+            # when this returns it means the button was clicked, the context returned is the context of the button that was clicked
             button_context : ComponentContext = await client.wait_for_component(components=[ready_button, not_ready_button], timeout=ready_up_model.timeout_in_seconds)
 
-            # switch based on the button id to figure out which button was clicked
-            custom_id_to_button_id_use_case = CustomIdToButtonIdUseCase(button_context.custom_id)
+            print(f"button context defer {button_context.id}")
+            await button_context.defer()
+
+            # parse the button id that was clicked            
+            custom_id_to_button_id_use_case =  ButtonCustomIdToButtonIdUseCase(button_context.custom_id)
             button_id = custom_id_to_button_id_use_case()
+
+            # switch based on the button id to figure out which button was clicked
             update_model_use_case = NoOpReadyUpModelUpdateUseCase(ready_up_model)
             match (button_id):
                 case ButtonId.READY:
@@ -84,8 +97,8 @@ async def ready_up_command(command_context : CommandContext, event_name : str = 
             get_interaction_reply_use_case = GetInteractionReplyUseCase(ready_up_model)
 
             # display the message to the user who pressed the button
-            await button_context.defer(ephemeral=True)
-            await button_context.send(get_interaction_reply_use_case())
+            print("sending reply")
+            await button_context.send(content=get_interaction_reply_use_case(), ephemeral=True)
 
         except TimeoutError:
             print("not enough people readied up, and we timed out")
@@ -93,12 +106,20 @@ async def ready_up_command(command_context : CommandContext, event_name : str = 
         finally:
             is_ready_up_finished_use_case = IsReadyUpFinishedUseCase(ready_up_model) 
 
-    # edit the initial call to action message to display as 'closed', and remove the interaction buttons
-    close_command_context_use_case = CloseReadyUpContextUseCase(command_context)
-    await close_command_context_use_case()
+    # if command context is still active so close out the poll
+    if ready_up_model.active_context is command_context:
+        print("current command context is still active -- closing now")
 
-    # send a message to ping everyone who readied up displaying the result of the poll
-    get_final_result_message_use_case = GetFinalResultMessageUseCase(ready_up_model)
-    await command_context.send(get_final_result_message_use_case())
+        # edit the initial call to action message to display as 'closed', and remove the interaction buttons
+        close_active_context_use_case = CloseActiveContextUseCase(ready_up_model)
+        await close_active_context_use_case()
+            
+        # send a message to ping everyone who readied up displaying the result of the poll
+        print("sending final result message")
+        get_final_result_message_use_case = GetFinalResultMessageUseCase(ready_up_model)
+        await command_context.send(get_final_result_message_use_case())
+    # else someone else alaready closed the poll
+    else:
+        print("poll was already closed")
 
 client.start()

@@ -1,8 +1,9 @@
-from readyup_constants import ButtonId
+from stringprep import in_table_b1
+from readyup_constants import ButtonId, ButtonIdStr
 from readyup_domain import ReadyUpModel
 from interactions import CommandContext, ComponentContext, Member
 
-class ButtonIdToCustomIdUseCase:
+class ButtonIdToStringUseCase:
     def __init__(self, in_button_id : ButtonId):
         self.button_id = in_button_id
 
@@ -15,7 +16,7 @@ class ButtonIdToCustomIdUseCase:
             case _:
                 return "invalid"
 
-class CustomIdToButtonIdUseCase:
+class StringToButtonIdUseCase:
     def __init__(self, in_custom_id : str):
         self.custom_id = in_custom_id
 
@@ -29,6 +30,18 @@ class CustomIdToButtonIdUseCase:
             case _:
                 return ButtonId.INVALID
 
+class ButtonCustomIdToButtonIdUseCase:
+    def __init__(self, in_custom_id_str : str):
+        self.custom_id_str = in_custom_id_str
+    
+    def __call__(self) -> ButtonId:
+        if self.custom_id_str.startswith(ButtonIdStr.READY.value):
+            return ButtonId.READY
+        elif self.custom_id_str.startswith(ButtonIdStr.NOT_READY.value):
+            return ButtonId.NOT_READY
+        else:
+            return ButtonId.INVALID
+
 class GetInteractionReplyUseCase:
     def __init__(self, in_model : ReadyUpModel) -> None:
         self.model = in_model
@@ -39,7 +52,7 @@ class GetInteractionReplyUseCase:
         get_not_ready_members_names = StringifyMembersToNamesUseCase(self.model.not_ready_members)
         get_not_ready_members_plural = GetPluralUseCase(self.model.not_ready_members)
 
-        out_str : str = "Status: "
+        out_str : str = ""
 
         if len(self.model.ready_members) > 0:
             out_str += f"{ get_ready_members_names() } { get_ready_members_plural() } ready"
@@ -99,15 +112,16 @@ class CloseReadyUpContextUseCase:
                 await self.context.edit(components=[], content=new_content)
             except:
                 print("error trying to close ready up context")
+        
 
-class ClosePreviousContextUseCase:
+class CloseActiveContextUseCase:
     def __init__(self, inout_model : ReadyUpModel) -> None:
         self.model = inout_model
 
     async def __call__(self) -> ReadyUpModel:
-        close_ready_up_context_use_case = CloseReadyUpContextUseCase(self.model.previous_context)
+        close_ready_up_context_use_case = CloseReadyUpContextUseCase(self.model.active_context)
         await close_ready_up_context_use_case()
-        self.model.previous_context = None
+        self.model.active_context = None
         return self.model
 
 class CustomIdToModelUpdateActionUseCase:
@@ -200,7 +214,6 @@ class StringifyMembersToNamesUseCase:
         out_str = stringify_to_names()
         return out_str
 
-# gets the plural 
 class GetPluralUseCase:
     def __init__(self, in_container):
         self.container = in_container
