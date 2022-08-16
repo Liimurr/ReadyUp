@@ -117,7 +117,7 @@ async def ready_up_command(command_context : CommandContext, event_name : str = 
         finally:
             is_ready_up_finished_use_case = IsReadyUpFinishedUseCase(ready_up_model) 
 
-    # if command context is still active so close out the poll
+    # if command context is still active close out and show results
     if ready_up_model.active_context is command_context:
         print("current command context is still active -- closing now")
 
@@ -142,9 +142,3 @@ async def ready_up_command(command_context : CommandContext, event_name : str = 
         print("poll was already closed")
 
 client.start()
-
-@client.component
-async def ready_button(button_context : ComponentContext):
-    print("ready buttonc licked")
-
-
