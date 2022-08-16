@@ -36,7 +36,7 @@ class ButtonCustomIdToButtonIdUseCase:
         self.custom_id_str = in_custom_id_str
     
     def __call__(self) -> ButtonId:
-        # custom_id of buttons takes the form of <button_id><random_numbers> so we just check the beggining id to parse what type of button it is.
+        # custom_id of buttons takes the form of "<button_id>$<random_numbers>" so we just check the beggining id to parse what type of button it is.
         custom_id_split = self.custom_id_str.split(BUTTON_ID_SEPARATOR)
         button_id_str = custom_id_split[0] if custom_id_split else "invalid"
         print(f"custom_id_split{custom_id_split}")
