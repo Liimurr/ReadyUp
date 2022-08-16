@@ -1,4 +1,3 @@
-from stringprep import in_table_b1
 from readyup_constants import BUTTON_ID_SEPARATOR, ButtonId, ButtonIdStr
 from readyup_domain import ReadyUpModel
 from readyup_ui import ReadyUpViewModel
