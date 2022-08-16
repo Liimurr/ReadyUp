@@ -4,7 +4,6 @@ class ReadyUpModel:
     def __init__(self) -> None:
 
         self.event_name : str = ""
-        self.time_name : str = ""
         self.num_ready_for_success : int = 3
         self.num_not_ready_for_failure : int = 1
         self.timeout_in_seconds : float = 900 # 15 minutes
@@ -17,7 +16,6 @@ class ReadyUpModel:
     def clear(self) -> None:
 
         self.event_name : str = ""
-        self.time_frame : str = ""
         self.call_to_action : str = ""
         self.num_ready_for_success : int = 3
         self.num_not_ready_for_failure : int = 1

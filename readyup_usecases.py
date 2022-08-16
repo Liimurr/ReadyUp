@@ -257,14 +257,11 @@ class GetCallToActionMessageUseCase:
         self.model = in_model
 
     def __call__(self) -> str:
-        event_name_concat = "are you ready"
+        out_str = "are you ready"
         if (self.model.event_name and not self.model.event_name.isspace()):
-            event_name_concat += f" for {self.model.event_name}"
-        time_frame_concat = ""
-        if (self.model.time_frame and not self.model.time_frame.isspace()):
-            time_frame_concat = " " + self.model.time_frame
-
-        return f"{event_name_concat}{time_frame_concat}?"
+            out_str += f" for {self.model.event_name}"
+        out_str += "?"
+        return out_str
 
 # Invalidates the view model, i.e. clears the view_model data and initializes it based on the model
 class ModelToViewModelUseCase:
@@ -283,7 +280,7 @@ class ModelToViewModelUseCase:
         if self.model.not_ready_members or self.model.ready_members:
              self.view_model.status = get_status_message_use_case()
         
-        # get the call to action message i.e. "Are you ready? | Are your ready for <event> <time_frame>?"
+        # get the call to action message i.e. "Are you ready? | Are your ready for <event>?"
         self.view_model.call_to_action = get_call_to_action_use_case()
 
         return  self.view_model 
